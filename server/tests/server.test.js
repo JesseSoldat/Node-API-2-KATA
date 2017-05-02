@@ -4,13 +4,15 @@ const {ObjectID} = require('mongodb');
 
 const {app} = require('../server');
 const {Todo} = require('../models/todo');
-const {todos, populateTodos} = require('./seed/seed');
+const {User} = require('../models/user');
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
+beforeEach(populateUsers);
 beforeEach(populateTodos);
 
 describe('POST /todos', () => {
 	it('should create a new todo', (done) => {
-		var text = 'Test todo text';
+		var text = 'Test todo text'; 
 
 		request(app)
 			.post('/todos')
@@ -152,6 +154,22 @@ describe('PATCH /todos/:id', () => {
 				expect(res.body.todo.text).toBe(text);
 				expect(res.body.todo.completed).toBe(false);
 				expect(res.body.todo.completedAt).toNotExist();
+			})
+			.end(done);
+	});
+});
+
+//USER TESTS--------------------------------------------------
+
+describe('GET /users/me', () => {
+	it('should return user if authenticated', (done) => {
+		request(app)
+			.get('/users/me')
+			.set('x-auth', users[0].tokens[0].token)
+			.expect(200)
+			.expect(res => {
+				expect(res.body._id).toBe(users[0]._id.toHexString());
+				expect(res.body.email).toBe(users[0].email)
 			})
 			.end(done);
 	});
